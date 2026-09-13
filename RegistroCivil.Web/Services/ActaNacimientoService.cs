@@ -141,7 +141,7 @@ public class ActaNacimientoService
                 UbigeoNacimiento = @UbigeoNacimiento,
                 LugarNacimiento = @LugarNacimiento,
                 FechaModificacion = SYSDATETIME()
-            WHERE Id = @Id;
+            WHERE Id = @Id AND Estado = 1;
             """;
 
         await using var conexion = new SqlConnection(_connectionString);
