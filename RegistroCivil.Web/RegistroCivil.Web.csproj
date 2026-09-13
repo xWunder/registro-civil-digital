@@ -7,4 +7,12 @@
     <BlazorDisableThrowNavigationException>true</BlazorDisableThrowNavigationException>
   </PropertyGroup>
 
+  <ItemGroup>
+    <Folder Include="Data\" />
+    <Folder Include="FileStorage\" />
+    <Folder Include="Database\" />
+    <Folder Include="Tests\" />
+    <Folder Include="Services\" />
+  </ItemGroup>
+
 </Project>
