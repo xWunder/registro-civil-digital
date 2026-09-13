@@ -1,0 +1,94 @@
+﻿@page "/actas"
+@using RegistroCivil.Web.Models
+@using RegistroCivil.Web.Services
+@inject ActaNacimientoService ActaService
+
+<PageTitle>Actas de nacimiento</PageTitle>
+
+<h1>Actas de nacimiento</h1>
+
+<p>Registros almacenados en SQL Server.</p>
+
+@if (cargando)
+{
+    <p>Cargando actas...</p>
+}
+else if (!string.IsNullOrWhiteSpace(mensajeError))
+{
+    <div class="alert alert-danger">
+        <strong>No se pudo consultar SQL Server.</strong>
+        <br />
+        @mensajeError
+    </div>
+}
+else if (actas.Count == 0)
+{
+    <div class="alert alert-info">
+        No existen actas registradas.
+    </div>
+}
+else
+{
+    <div class="table-responsive">
+        <table class="table table-striped table-hover">
+            <thead>
+                <tr>
+                    <th>Número de acta</th>
+                    <th>DNI</th>
+                    <th>Apellidos y nombres</th>
+                    <th>Fecha de nacimiento</th>
+                    <th>Lugar</th>
+                    <th>Estado</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var acta in actas)
+                {
+                    <tr>
+                        <td>@acta.NumeroActa</td>
+                        <td>@(acta.DniInscrito ?? "Sin DNI")</td>
+                        <td>
+                            @acta.ApellidoPaterno
+                            @acta.ApellidoMaterno,
+                            @acta.Nombres
+                        </td>
+                        <td>@acta.FechaNacimiento.ToString("dd/MM/yyyy")</td>
+                        <td>@acta.LugarNacimiento</td>
+                        <td>
+                            @if (acta.Estado == 1)
+                            {
+                                <span class="badge bg-success">Activa</span>
+                            }
+                            else
+                            {
+                                <span class="badge bg-secondary">Anulada</span>
+                            }
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+}
+
+@code {
+    private List<ActaNacimiento> actas = [];
+    private bool cargando = true;
+    private string? mensajeError;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            actas = await ActaService.ListarAsync();
+        }
+        catch (Exception ex)
+        {
+            mensajeError = ex.Message;
+        }
+        finally
+        {
+            cargando = false;
+        }
+    }
+}

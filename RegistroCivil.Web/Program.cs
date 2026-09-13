@@ -1,10 +1,13 @@
 using RegistroCivil.Web.Components;
+using RegistroCivil.Web.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
+
+builder.Services.AddScoped<ActaNacimientoService>();
 
 var app = builder.Build();
 
