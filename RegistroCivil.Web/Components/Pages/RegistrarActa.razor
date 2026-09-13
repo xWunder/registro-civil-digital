@@ -1,0 +1,211 @@
+﻿@page "/actas/registrar"
+@using Microsoft.Data.SqlClient
+@using RegistroCivil.Web.Models
+@using RegistroCivil.Web.Services
+@inject ActaNacimientoService ActaService
+
+<PageTitle>Registrar acta</PageTitle>
+
+<h1>Registrar acta de nacimiento</h1>
+
+<p>Complete los datos del nuevo registro.</p>
+
+@if (!string.IsNullOrWhiteSpace(mensajeExito))
+{
+    <div class="alert alert-success">
+        @mensajeExito
+    </div>
+}
+
+@if (!string.IsNullOrWhiteSpace(mensajeError))
+{
+    <div class="alert alert-danger">
+        @mensajeError
+    </div>
+}
+
+<div class="card">
+    <div class="card-body">
+        <EditForm Model="@acta"
+                  OnValidSubmit="@RegistrarAsync"
+                  FormName="registrar-acta">
+
+            <DataAnnotationsValidator />
+            <ValidationSummary class="text-danger" />
+
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <label class="form-label">Número de acta</label>
+                    <InputText class="form-control"
+                               @bind-Value="acta.NumeroActa" />
+                    <ValidationMessage For="@(() => acta.NumeroActa)" />
+                </div>
+
+                <div class="col-md-6">
+                    <label class="form-label">DNI del inscrito</label>
+                    <InputText class="form-control"
+                               maxlength="8"
+                               @bind-Value="acta.DniInscrito" />
+                    <ValidationMessage For="@(() => acta.DniInscrito)" />
+                </div>
+
+                <div class="col-md-6">
+                    <label class="form-label">Apellido paterno</label>
+                    <InputText class="form-control"
+                               @bind-Value="acta.ApellidoPaterno" />
+                    <ValidationMessage For="@(() => acta.ApellidoPaterno)" />
+                </div>
+
+                <div class="col-md-6">
+                    <label class="form-label">Apellido materno</label>
+                    <InputText class="form-control"
+                               @bind-Value="acta.ApellidoMaterno" />
+                    <ValidationMessage For="@(() => acta.ApellidoMaterno)" />
+                </div>
+
+                <div class="col-md-12">
+                    <label class="form-label">Nombres</label>
+                    <InputText class="form-control"
+                               @bind-Value="acta.Nombres" />
+                    <ValidationMessage For="@(() => acta.Nombres)" />
+                </div>
+
+                <div class="col-md-4">
+                    <label class="form-label">
+                        Fecha de nacimiento
+                    </label>
+                    <InputDate class="form-control"
+                               @bind-Value="acta.FechaNacimiento" />
+                    <ValidationMessage For="@(() => acta.FechaNacimiento)" />
+                </div>
+
+                <div class="col-md-4">
+                    <label class="form-label">Sexo</label>
+                    <InputSelect class="form-select"
+                                 @bind-Value="acta.Sexo">
+                        <option value="">Seleccione</option>
+                        <option value="F">Femenino</option>
+                        <option value="M">Masculino</option>
+                    </InputSelect>
+                    <ValidationMessage For="@(() => acta.Sexo)" />
+                </div>
+
+                <div class="col-md-4">
+                    <label class="form-label">
+                        Ubigeo de nacimiento
+                    </label>
+                    <InputText class="form-control"
+                               maxlength="6"
+                               @bind-Value="acta.UbigeoNacimiento" />
+                    <ValidationMessage For="@(() => acta.UbigeoNacimiento)" />
+                </div>
+
+                <div class="col-md-12">
+                    <label class="form-label">
+                        Lugar de nacimiento
+                    </label>
+                    <InputText class="form-control"
+                               @bind-Value="acta.LugarNacimiento" />
+                    <ValidationMessage For="@(() => acta.LugarNacimiento)" />
+                </div>
+
+                <div class="col-12 d-flex gap-2 mt-4">
+                    <button type="submit"
+                            class="btn btn-primary"
+                            disabled="@procesando">
+                        @(procesando ? "Registrando..." : "Registrar acta")
+                    </button>
+
+                    <button type="button"
+                            class="btn btn-outline-secondary"
+                            disabled="@procesando"
+                            @onclick="LimpiarFormulario">
+                        Limpiar
+                    </button>
+
+                    <a class="btn btn-outline-dark" href="/actas">
+                        Volver a búsqueda
+                    </a>
+                </div>
+            </div>
+        </EditForm>
+    </div>
+</div>
+
+@code {
+    private ActaNacimiento acta = NuevaActa();
+    private bool procesando;
+    private string? mensajeExito;
+    private string? mensajeError;
+
+    private async Task RegistrarAsync()
+    {
+        mensajeExito = null;
+        mensajeError = null;
+
+        if (acta.FechaNacimiento >
+            DateOnly.FromDateTime(DateTime.Today))
+        {
+            mensajeError =
+                "La fecha de nacimiento no puede ser futura.";
+            return;
+        }
+
+        procesando = true;
+
+        try
+        {
+            var id = await ActaService.RegistrarAsync(acta);
+
+            mensajeExito =
+                $"Acta registrada correctamente con el identificador {id}.";
+
+            acta = NuevaActa();
+        }
+        catch (SqlException ex) when (ex.Number is 2601 or 2627)
+        {
+            if (ex.Message.Contains(
+                "IX_ActasNacimiento_DniInscrito",
+                StringComparison.OrdinalIgnoreCase))
+            {
+                mensajeError =
+                    "El DNI ya está asociado a otra acta de nacimiento.";
+            }
+            else
+            {
+                mensajeError =
+                    "El número de acta ya está registrado.";
+            }
+        }
+        catch (SqlException ex)
+        {
+            mensajeError =
+                $"No se pudo registrar el acta: {ex.Message}";
+        }
+        catch (Exception ex)
+        {
+            mensajeError =
+                $"Ocurrió un error inesperado: {ex.Message}";
+        }
+        finally
+        {
+            procesando = false;
+        }
+    }
+
+    private void LimpiarFormulario()
+    {
+        acta = NuevaActa();
+        mensajeExito = null;
+        mensajeError = null;
+    }
+
+    private static ActaNacimiento NuevaActa()
+    {
+        return new ActaNacimiento
+        {
+            FechaNacimiento =
+                DateOnly.FromDateTime(DateTime.Today)
+        };
+    }
+}

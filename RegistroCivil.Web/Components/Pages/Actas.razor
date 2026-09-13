@@ -90,6 +90,7 @@ else
                         <th>Fecha de nacimiento</th>
                         <th>Lugar</th>
                         <th>Estado</th>
+                        <th>Acciones</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -121,6 +122,39 @@ else
                                     </span>
                                 }
                             </td>
+                            <td class="text-nowrap">
+                                @if (acta.Estado == 1)
+                                {
+                                    <a class="btn btn-sm btn-outline-primary me-1"
+                                       href="@($"/actas/editar/{acta.NumeroActa}")">
+                                        Editar
+                                    </a>
+
+                                    @if (idPendienteAnular == acta.Id)
+                                    {
+                                        <button class="btn btn-sm btn-danger me-1"
+                                                @onclick="() => ConfirmarAnulacionAsync(acta.Id)">
+                                            Confirmar
+                                        </button>
+
+                                        <button class="btn btn-sm btn-secondary"
+                                                @onclick="CancelarAnulacion">
+                                            Cancelar
+                                        </button>
+                                    }
+                                    else
+                                    {
+                                        <button class="btn btn-sm btn-outline-danger"
+                                                @onclick="() => SolicitarAnulacion(acta.Id)">
+                                            Anular
+                                        </button>
+                                    }
+                                }
+                                else
+                                {
+                                    <span class="text-muted">Sin acciones</span>
+                                }
+                            </td>
                         </tr>
                     }
                 </tbody>
@@ -137,6 +171,7 @@ else
     private string? mensajeInformativo;
     private double? tiempoMilisegundos;
     private bool cargando = true;
+    private long? idPendienteAnular;
 
     protected override async Task OnInitializedAsync()
     {
@@ -247,6 +282,47 @@ else
             cronometro.Stop();
             tiempoMilisegundos =
                 cronometro.Elapsed.TotalMilliseconds;
+            cargando = false;
+        }
+    }
+    private void SolicitarAnulacion(long id)
+    {
+        idPendienteAnular = id;
+        mensajeError = null;
+        mensajeInformativo =
+            "Confirme si realmente desea anular esta acta.";
+    }
+
+    private void CancelarAnulacion()
+    {
+        idPendienteAnular = null;
+        mensajeInformativo = null;
+    }
+
+    private async Task ConfirmarAnulacionAsync(long id)
+    {
+        cargando = true;
+        mensajeError = null;
+        mensajeInformativo = null;
+
+        try
+        {
+            var anulada = await ActaService.AnularAsync(id);
+
+            await CargarTodosAsync();
+
+            mensajeInformativo = anulada
+                ? "El acta fue anulada correctamente."
+                : "El acta ya estaba anulada o no existe.";
+        }
+        catch (Exception ex)
+        {
+            mensajeError =
+                $"No se pudo anular el acta: {ex.Message}";
+        }
+        finally
+        {
+            idPendienteAnular = null;
             cargando = false;
         }
     }

@@ -1,0 +1,222 @@
+﻿@page "/actas/editar/{NumeroActa}"
+@using Microsoft.Data.SqlClient
+@using RegistroCivil.Web.Models
+@using RegistroCivil.Web.Services
+@inject ActaNacimientoService ActaService
+
+<PageTitle>Editar acta</PageTitle>
+
+<h1>Editar acta de nacimiento</h1>
+
+@if (cargando)
+{
+    <p>Cargando acta...</p>
+}
+else if (!string.IsNullOrWhiteSpace(mensajeCarga))
+{
+    <div class="alert alert-danger">@mensajeCarga</div>
+
+    <a class="btn btn-secondary" href="/actas">
+        Volver a búsqueda
+    </a>
+}
+else if (acta is not null)
+{
+    @if (!string.IsNullOrWhiteSpace(mensajeExito))
+    {
+        <div class="alert alert-success">@mensajeExito</div>
+    }
+
+    @if (!string.IsNullOrWhiteSpace(mensajeError))
+    {
+        <div class="alert alert-danger">@mensajeError</div>
+    }
+
+    <div class="card">
+        <div class="card-body">
+            <EditForm Model="@acta"
+                      OnValidSubmit="@GuardarAsync"
+                      FormName="editar-acta">
+
+                <DataAnnotationsValidator />
+                <ValidationSummary class="text-danger" />
+
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label class="form-label">Número de acta</label>
+                        <input class="form-control"
+                               value="@acta.NumeroActa"
+                               readonly />
+                        <div class="form-text">
+                            El número del acta no puede modificarse.
+                        </div>
+                    </div>
+
+                    <div class="col-md-6">
+                        <label class="form-label">DNI del inscrito</label>
+                        <InputText class="form-control"
+                                   maxlength="8"
+                                   @bind-Value="acta.DniInscrito" />
+                        <ValidationMessage For="@(() => acta.DniInscrito)" />
+                    </div>
+
+                    <div class="col-md-6">
+                        <label class="form-label">Apellido paterno</label>
+                        <InputText class="form-control"
+                                   @bind-Value="acta.ApellidoPaterno" />
+                        <ValidationMessage For="@(() => acta.ApellidoPaterno)" />
+                    </div>
+
+                    <div class="col-md-6">
+                        <label class="form-label">Apellido materno</label>
+                        <InputText class="form-control"
+                                   @bind-Value="acta.ApellidoMaterno" />
+                        <ValidationMessage For="@(() => acta.ApellidoMaterno)" />
+                    </div>
+
+                    <div class="col-md-12">
+                        <label class="form-label">Nombres</label>
+                        <InputText class="form-control"
+                                   @bind-Value="acta.Nombres" />
+                        <ValidationMessage For="@(() => acta.Nombres)" />
+                    </div>
+
+                    <div class="col-md-4">
+                        <label class="form-label">
+                            Fecha de nacimiento
+                        </label>
+                        <InputDate class="form-control"
+                                   @bind-Value="acta.FechaNacimiento" />
+                    </div>
+
+                    <div class="col-md-4">
+                        <label class="form-label">Sexo</label>
+                        <InputSelect class="form-select"
+                                     @bind-Value="acta.Sexo">
+                            <option value="">Seleccione</option>
+                            <option value="F">Femenino</option>
+                            <option value="M">Masculino</option>
+                        </InputSelect>
+                        <ValidationMessage For="@(() => acta.Sexo)" />
+                    </div>
+
+                    <div class="col-md-4">
+                        <label class="form-label">
+                            Ubigeo de nacimiento
+                        </label>
+                        <InputText class="form-control"
+                                   maxlength="6"
+                                   @bind-Value="acta.UbigeoNacimiento" />
+                        <ValidationMessage For="@(() => acta.UbigeoNacimiento)" />
+                    </div>
+
+                    <div class="col-md-12">
+                        <label class="form-label">
+                            Lugar de nacimiento
+                        </label>
+                        <InputText class="form-control"
+                                   @bind-Value="acta.LugarNacimiento" />
+                        <ValidationMessage For="@(() => acta.LugarNacimiento)" />
+                    </div>
+
+                    <div class="col-12 d-flex gap-2 mt-4">
+                        <button type="submit"
+                                class="btn btn-primary"
+                                disabled="@procesando">
+                            @(procesando
+                                ? "Guardando..."
+                                : "Guardar cambios")
+                        </button>
+
+                        <a class="btn btn-outline-secondary"
+                           href="/actas">
+                            Cancelar
+                        </a>
+                    </div>
+                </div>
+            </EditForm>
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter]
+    public string NumeroActa { get; set; } = string.Empty;
+
+    private ActaNacimiento? acta;
+    private bool cargando = true;
+    private bool procesando;
+    private string? mensajeCarga;
+    private string? mensajeExito;
+    private string? mensajeError;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        cargando = true;
+        mensajeCarga = null;
+
+        try
+        {
+            acta = await ActaService.BuscarPorNumeroAsync(NumeroActa);
+
+            if (acta is null)
+            {
+                mensajeCarga = "El acta solicitada no existe.";
+            }
+        }
+        catch (Exception ex)
+        {
+            mensajeCarga =
+                $"No se pudo cargar el acta: {ex.Message}";
+        }
+        finally
+        {
+            cargando = false;
+        }
+    }
+
+    private async Task GuardarAsync()
+    {
+        if (acta is null)
+        {
+            return;
+        }
+
+        mensajeExito = null;
+        mensajeError = null;
+
+        if (acta.FechaNacimiento >
+            DateOnly.FromDateTime(DateTime.Today))
+        {
+            mensajeError =
+                "La fecha de nacimiento no puede ser futura.";
+            return;
+        }
+
+        procesando = true;
+
+        try
+        {
+            var actualizado =
+                await ActaService.ModificarAsync(acta);
+
+            mensajeExito = actualizado
+                ? "El acta fue modificada correctamente."
+                : "No se encontró el acta que se intentó modificar.";
+        }
+        catch (SqlException ex) when (ex.Number is 2601 or 2627)
+        {
+            mensajeError =
+                "El DNI ya está asociado a otra acta de nacimiento.";
+        }
+        catch (Exception ex)
+        {
+            mensajeError =
+                $"No se pudo modificar el acta: {ex.Message}";
+        }
+        finally
+        {
+            procesando = false;
+        }
+    }
+}
