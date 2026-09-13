@@ -72,7 +72,7 @@ IF NOT EXISTS
       AND object_id = OBJECT_ID('dbo.ActasNacimiento')
 )
 BEGIN
-    CREATE INDEX IX_ActasNacimiento_DniInscrito
+    CREATE UNIQUE INDEX IX_ActasNacimiento_DniInscrito
         ON dbo.ActasNacimiento (DniInscrito)
         WHERE DniInscrito IS NOT NULL;
 END;
