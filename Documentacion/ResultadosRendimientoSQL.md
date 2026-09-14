@@ -29,7 +29,7 @@ Consulta utilizada:
 SELECT *
 FROM dbo.ActasNacimiento
 WHERE DniInscrito = '90100000';
-
+```
 3. Búsqueda por Número de Acta
 
 Consulta utilizada:
@@ -38,7 +38,7 @@ Consulta utilizada:
 SELECT *
 FROM dbo.ActasNacimiento
 WHERE NumeroActa = 'ACT-2026-100000';
-
+```
 
 | Registros | Consulta                    | Índice | Tiempo de ejecución | Lecturas lógicas | Lecturas físicas |
 | --------: | --------------------------- | ------ | ------------------: | ---------------: | ---------------: |
@@ -76,7 +76,7 @@ Memoria RAM:8.00 GB
 Motor de base de datos: Microsoft SQL Server 2019
 Herramienta: SQL Server Management Studio 22
 
-8.Conclusion 
+8.Conclusión 
 
 Las pruebas permiten evaluar el comportamiento de las búsquedas sobre la tabla ActasNacimiento utilizando índices.
 
