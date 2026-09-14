@@ -1,31 +1,31 @@
 ﻿<div class="top-row ps-3 navbar navbar-dark">
 	<div class="container-fluid">
-		<a class="navbar-brand d-flex align-items-center gap-2" href="">
-			<i class="bi bi-shield-check text-info fs-4"></i>
-			<span class="fw-bold text-white">Registro Civil Digital</span>
-		</a>
+		<a class="navbar-brand fw-bold text-white" href="">Registro Civil Digital</a>
+		<label for="navbar-toggler-input" class="navbar-toggler d-md-none" aria-label="Toggle navigation">
+			<span class="navbar-toggler-icon"></span>
+		</label>
 	</div>
 </div>
 
-<input type="checkbox" title="Toggle navigation" id="navbar-toggler" class="navbar-toggler d-none" />
+<input type="checkbox" id="navbar-toggler-input" class="navbar-toggler-checkbox" />
 
-<div class="nav-scrollable" onclick="document.getElementById('navbar-toggler').click()">
+<div class="nav-scrollable" onclick="document.getElementById('navbar-toggler-input').click()">
 	<nav class="flex-column mt-2 px-2">
 		<div class="nav-item">
 			<NavLink class="nav-link" href="" Match="NavLinkMatch.All">
-				<span class="bi bi-house-door-fill me-2" aria-hidden="true"></span> Inicio
+				<span class="me-2" aria-hidden="true">🏠</span> Inicio
 			</NavLink>
 		</div>
 
 		<div class="nav-item">
 			<NavLink class="nav-link" href="actas" Match="NavLinkMatch.All">
-				<span class="bi bi-search me-2" aria-hidden="true"></span> Búsqueda de actas
+				<span class="me-2" aria-hidden="true">🔍</span> Búsqueda de actas
 			</NavLink>
 		</div>
 
 		<div class="nav-item">
 			<NavLink class="nav-link" href="actas/registrar">
-				<span class="bi bi-file-earmark-plus-fill me-2" aria-hidden="true"></span> Registrar acta
+				<span class="me-2" aria-hidden="true">📝</span> Registrar acta
 			</NavLink>
 		</div>
 	</nav>

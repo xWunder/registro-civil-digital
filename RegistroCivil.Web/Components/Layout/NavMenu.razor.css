@@ -39,3 +39,7 @@
     color: #ffffff;
     transform: translateX(3px);
 }
+/* Oculta el cuadro nativo del checkbox */
+.navbar-toggler-checkbox {
+    display: none;
+}
