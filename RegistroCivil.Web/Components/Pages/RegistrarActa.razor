@@ -6,9 +6,11 @@
 
 <PageTitle>Registrar acta</PageTitle>
 
-<h1>Registrar acta de nacimiento</h1>
-
-<p>Complete los datos del nuevo registro.</p>
+<div class="page-heading">
+    <span class="eyebrow">Nueva inscripción</span>
+    <h1>Registrar acta</h1>
+    <p>Complete la información del inscrito. Los datos serán validados antes de guardarse.</p>
+</div>
 
 @if (!string.IsNullOrWhiteSpace(mensajeExito))
 {
@@ -24,7 +26,7 @@
     </div>
 }
 
-<div class="card">
+<div class="card form-panel">
     <div class="card-body">
         <EditForm Model="@acta"
                   OnValidSubmit="@RegistrarAsync"
@@ -109,22 +111,15 @@
                     <ValidationMessage For="@(() => acta.LugarNacimiento)" />
                 </div>
 
-                <div class="col-12 d-flex gap-2 mt-4">
+                <div class="col-12 form-actions mt-4">
                     <button type="submit"
                             class="btn btn-primary"
                             disabled="@procesando">
                         @(procesando ? "Registrando..." : "Registrar acta")
                     </button>
 
-                    <button type="button"
-                            class="btn btn-outline-secondary"
-                            disabled="@procesando"
-                            @onclick="LimpiarFormulario">
-                        Limpiar
-                    </button>
-
-                    <a class="btn btn-outline-dark" href="/actas">
-                        Volver a búsqueda
+                    <a class="btn btn-outline-secondary" href="/actas">
+                        Cancelar
                     </a>
                 </div>
             </div>
@@ -191,13 +186,6 @@
         {
             procesando = false;
         }
-    }
-
-    private void LimpiarFormulario()
-    {
-        acta = NuevaActa();
-        mensajeExito = null;
-        mensajeError = null;
     }
 
     private static ActaNacimiento NuevaActa()
