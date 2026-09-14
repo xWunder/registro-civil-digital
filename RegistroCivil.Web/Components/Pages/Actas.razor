@@ -6,11 +6,13 @@
 
 <PageTitle>Búsqueda de actas</PageTitle>
 
-<h1>Búsqueda de actas de nacimiento</h1>
+<div class="page-heading">
+    <span class="eyebrow">Consulta de registros</span>
+    <h1>Búsqueda de actas</h1>
+    <p>Localice un acta de nacimiento mediante uno de los criterios disponibles.</p>
+</div>
 
-<p>Consulte los registros almacenados en SQL Server.</p>
-
-<div class="card mb-4">
+<div class="card filter-panel mb-4">
     <div class="card-body">
         <h5 class="card-title">Criterios de búsqueda</h5>
 
@@ -67,8 +69,11 @@
 }
 else
 {
-    <div class="d-flex justify-content-between align-items-center mb-2">
-        <strong>Resultados: @actas.Count</strong>
+    <div class="results-summary">
+        <div>
+            <span>Resultados</span>
+            <strong>@actas.Count registros</strong>
+        </div>
 
         @if (tiempoMilisegundos.HasValue)
         {
@@ -80,7 +85,7 @@ else
 
     @if (actas.Count > 0)
     {
-        <div class="table-responsive">
+        <div class="table-responsive data-table-shell">
             <table class="table table-striped table-hover">
                 <thead>
                     <tr>
