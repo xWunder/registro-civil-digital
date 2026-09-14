@@ -2,7 +2,7 @@ USE RegistroCivilDigital;
 GO
 
 DECLARE @Cantidad INT = 100000;
-DECLARE @Inicio INT = 2;
+DECLARE @Inicio INT = 100000;
 
 ;WITH Numeros AS
 (
@@ -42,7 +42,25 @@ SELECT
     SYSDATETIME(),
     SYSDATETIME(),
     1
-FROM Numeros;
+FROM Numeros
+WHERE NOT EXISTS
+(
+    SELECT 1
+    FROM dbo.ActasNacimiento A
+    WHERE A.NumeroActa = CONCAT(
+        'ACT-2026-',
+        RIGHT('000000' + CAST(N AS VARCHAR(6)), 6)
+    )
+)
+AND NOT EXISTS
+(
+    SELECT 1
+    FROM dbo.ActasNacimiento A
+    WHERE A.DniInscrito = RIGHT(
+        '00000000' + CAST(90000000 + N AS VARCHAR(8)),
+        8
+    )
+);
 GO
 
 SELECT COUNT(*) AS TotalRegistros

@@ -8,13 +8,13 @@ PRINT '=== BUSQUEDA POR DNI ===';
 
 SELECT *
 FROM dbo.ActasNacimiento
-WHERE DniInscrito = '90050001';
+WHERE DniInscrito = '90100000';
 
 PRINT '=== BUSQUEDA POR NUMERO DE ACTA ===';
 
 SELECT *
 FROM dbo.ActasNacimiento
-WHERE NumeroActa = 'ACT-2026-050000';
+WHERE NumeroActa = 'ACT-2026-100000';
 
 SET STATISTICS TIME OFF;
 SET STATISTICS IO OFF;
