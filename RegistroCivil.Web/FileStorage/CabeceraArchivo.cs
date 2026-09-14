@@ -19,7 +19,7 @@ public static class CabeceraArchivo
         escritor.Write(new byte[tamañorelleno]);
     }
 
-    public static long leer(BinaryReader lector)
+    public static long Leer(BinaryReader lector)
     {
         var bytesFirma = lector.ReadBytes(8);
         var firma = Encoding.UTF8.GetString(bytesFirma);
