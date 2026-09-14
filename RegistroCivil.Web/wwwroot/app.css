@@ -58,3 +58,27 @@ h1:focus {
 .form-floating > .form-control-plaintext:focus::placeholder, .form-floating > .form-control:focus::placeholder {
     text-align: start;
 }
+
+:root {
+    --navy-main: #0f2e5a;
+    --navy-light: #1e40af;
+}
+
+body {
+    background-color: #f8fafc;
+    font-family: system-ui, -apple-system, sans-serif;
+}
+
+.bg-navy {
+    background: linear-gradient(135deg, var(--navy-main) 0%, var(--navy-light) 100%) !important;
+}
+
+/* Animación suave para tarjetas interactivas */
+.card-hover {
+    transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+}
+
+.card-hover:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 0.5rem 1.25rem rgba(15, 46, 90, 0.12) !important;
+}
