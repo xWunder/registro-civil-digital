@@ -1,7 +1,65 @@
-﻿@page "/"
+@page "/"
 
-<PageTitle>Home</PageTitle>
+<PageTitle>Inicio - Sistema de Registro Civil Digital</PageTitle>
 
-<h1>Hello, world!</h1>
+<div class="dashboard-shell">
+    <section class="welcome-panel">
+        <div class="welcome-copy">
+            <span class="eyebrow">Registro Civil Digital</span>
+            <h1>Gestión de actas de nacimiento</h1>
+            <p>Consulte y registre información civil desde una plataforma rápida, clara y diseñada para el trabajo administrativo.</p>
+        </div>
+        <div class="welcome-seal" aria-hidden="true">
+            <span>RC</span>
+            <small>Digital</small>
+        </div>
+    </section>
 
-Welcome to your new app.
+    <section class="quick-access" aria-labelledby="quick-access-title">
+        <div class="section-heading">
+            <div>
+                <span class="eyebrow">Operaciones</span>
+                <h2 id="quick-access-title">¿Qué desea realizar?</h2>
+            </div>
+            <p>Seleccione una opción para comenzar.</p>
+        </div>
+        <div class="action-grid">
+            <a href="actas" class="action-card action-card-primary">
+                <span class="action-icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24"><circle cx="10.8" cy="10.8" r="6.8" /><path d="m16 16 4.5 4.5" /></svg>
+                </span>
+                <span class="action-content">
+                    <small>Consulta</small>
+                    <strong>Buscar actas</strong>
+                    <span>Localice un registro por número de acta o DNI.</span>
+                </span>
+                <span class="action-arrow" aria-hidden="true">→</span>
+            </a>
+            <a href="actas/registrar" class="action-card">
+                <span class="action-icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24"><path d="M6 3h9l4 4v14H6z" /><path d="M14 3v5h5M9 14h6M12 11v6" /></svg>
+                </span>
+                <span class="action-content">
+                    <small>Inscripción</small>
+                    <strong>Registrar acta</strong>
+                    <span>Ingrese una nueva acta con validación de datos.</span>
+                </span>
+                <span class="action-arrow" aria-hidden="true">→</span>
+            </a>
+        </div>
+    </section>
+
+    <section class="architecture-panel" aria-labelledby="architecture-title">
+        <div class="section-heading compact">
+            <div>
+                <span class="eyebrow">Arquitectura</span>
+                <h2 id="architecture-title">Componentes del sistema</h2>
+            </div>
+        </div>
+        <div class="architecture-grid">
+            <article><span class="module-number">01</span><div><strong>SQL Server</strong><p>Persistencia transaccional y consultas parametrizadas.</p></div></article>
+            <article><span class="module-number">02</span><div><strong>Archivo binario</strong><p>Registros de longitud fija para acceso directo.</p></div></article>
+            <article><span class="module-number">03</span><div><strong>Índices de búsqueda</strong><p>Acceso optimizado por número de acta y DNI.</p></div></article>
+        </div>
+    </section>
+</div>

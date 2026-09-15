@@ -15,32 +15,61 @@ public class ActaNacimientoService
                 "No se encontró la conexión RegistroCivil.");
     }
 
-    public async Task<List<ActaNacimiento>> ListarAsync()
+    public async Task<(List<ActaNacimiento> Actas, long TotalRegistros)>
+        ListarPaginadoAsync(int pagina, int tamanoPagina)
     {
+        if (pagina < 1)
+        {
+            throw new ArgumentOutOfRangeException(
+                nameof(pagina), "La página debe ser mayor que cero.");
+        }
+
+        if (tamanoPagina is < 1 or > 500)
+        {
+            throw new ArgumentOutOfRangeException(
+                nameof(tamanoPagina),
+                "El tamaño de página debe estar entre 1 y 500.");
+        }
+
         const string sql = """
-            SELECT TOP (500)
+            SELECT COUNT_BIG(*)
+            FROM dbo.ActasNacimiento;
+
+            SELECT
                 Id, NumeroActa, DniInscrito, ApellidoPaterno,
                 ApellidoMaterno, Nombres, FechaNacimiento, Sexo,
                 UbigeoNacimiento, LugarNacimiento, FechaRegistro,
                 FechaModificacion, Estado
             FROM dbo.ActasNacimiento
-            ORDER BY Id DESC;
+            ORDER BY Id DESC
+            OFFSET @Offset ROWS
+            FETCH NEXT @TamanoPagina ROWS ONLY;
             """;
 
         var actas = new List<ActaNacimiento>();
+        var offset = checked((pagina - 1) * tamanoPagina);
 
         await using var conexion = new SqlConnection(_connectionString);
         await using var comando = new SqlCommand(sql, conexion);
 
+        comando.Parameters.Add("@Offset", SqlDbType.Int).Value = offset;
+        comando.Parameters.Add("@TamanoPagina", SqlDbType.Int)
+            .Value = tamanoPagina;
+
         await conexion.OpenAsync();
         await using var lector = await comando.ExecuteReaderAsync();
+
+        await lector.ReadAsync();
+        var totalRegistros = lector.GetInt64(0);
+
+        await lector.NextResultAsync();
 
         while (await lector.ReadAsync())
         {
             actas.Add(LeerActa(lector));
         }
 
-        return actas;
+        return (actas, totalRegistros);
     }
 
     public async Task<ActaNacimiento?> BuscarPorNumeroAsync(string numeroActa)

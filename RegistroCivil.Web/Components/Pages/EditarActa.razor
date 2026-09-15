@@ -6,7 +6,11 @@
 
 <PageTitle>Editar acta</PageTitle>
 
-<h1>Editar acta de nacimiento</h1>
+<div class="page-heading">
+    <span class="eyebrow">Actualización de registro</span>
+    <h1>Editar acta</h1>
+    <p>Revise la información y guarde únicamente los cambios necesarios.</p>
+</div>
 
 @if (cargando)
 {
@@ -32,7 +36,7 @@ else if (acta is not null)
         <div class="alert alert-danger">@mensajeError</div>
     }
 
-    <div class="card">
+    <div class="card form-panel">
         <div class="card-body">
             <EditForm Model="@acta"
                       OnValidSubmit="@GuardarAsync"
@@ -119,7 +123,7 @@ else if (acta is not null)
                         <ValidationMessage For="@(() => acta.LugarNacimiento)" />
                     </div>
 
-                    <div class="col-12 d-flex gap-2 mt-4">
+                    <div class="col-12 form-actions mt-4">
                         <button type="submit"
                                 class="btn btn-primary"
                                 disabled="@procesando">
