@@ -80,4 +80,58 @@ public static class ActaArchivoBinario
 
         return acta;
     }
+
+     
+    public static List<ActaNacimiento> ListarTodas(string rutaActas)
+    {
+        var actas = new List<ActaNacimiento>();
+
+        using (var lector = new BinaryReader(File.OpenRead(rutaActas)))
+        {
+            var cantidadRegistros = CabeceraArchivo.Leer(lector);
+
+            for (long i = 0; i < cantidadRegistros; i++)
+            {
+                actas.Add(Leer(lector));
+            }
+        }
+
+        return actas;
+    }
+
+    
+    public static void Agregar(string rutaActas, ActaNacimiento acta)
+    {
+        long cantidadActual;
+
+        using (var lector = new BinaryReader(File.OpenRead(rutaActas)))
+        {
+            cantidadActual = CabeceraArchivo.Leer(lector);
+        }
+
+        using (var flujo = new FileStream(rutaActas, FileMode.Open, FileAccess.Write))
+        using (var escritor = new BinaryWriter(flujo))
+        {
+            var offsetNuevoRegistro = FormatoArchivoActas.CalcularOffset(cantidadActual);
+            flujo.Seek(offsetNuevoRegistro, SeekOrigin.Begin);
+
+            Escribir(escritor, acta);
+
+            flujo.Seek(0, SeekOrigin.Begin);
+            CabeceraArchivo.Escribir(escritor, cantidadActual + 1);
+        }
+    }
+
+    
+    public static void ModificarPorPosicion(string rutaActas, long posicion, ActaNacimiento actaActualizada)
+    {
+        using (var flujo = new FileStream(rutaActas, FileMode.Open, FileAccess.Write))
+        using (var escritor = new BinaryWriter(flujo))
+        {
+            var offset = FormatoArchivoActas.CalcularOffset(posicion);
+            flujo.Seek(offset, SeekOrigin.Begin);
+
+            Escribir(escritor, actaActualizada);
+        }
+    }
 }

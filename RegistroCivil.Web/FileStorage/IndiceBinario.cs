@@ -75,4 +75,46 @@ public static class IndiceBinario
             }
         }
     }
+    
+    
+    public static long BuscarBinario(string rutaIndice, string claveBuscada, int caracteresPorClave)
+    {
+        var bytesPorEntrada = (caracteresPorClave * 2) + sizeof(long);
+
+        using (var flujo = new FileStream(rutaIndice, FileMode.Open, FileAccess.Read))
+        using (var lector = new BinaryReader(flujo))
+        {
+            var totalEntradas = flujo.Length / bytesPorEntrada;
+
+            long inicio = 0;
+            long fin = totalEntradas - 1;
+
+            while (inicio <= fin)
+            {
+                var medio = inicio + (fin - inicio) / 2;
+
+                flujo.Seek(medio * bytesPorEntrada, SeekOrigin.Begin);
+
+                var claveLeida = TextoFijoBinario.Leer(lector, caracteresPorClave);
+                var posicion = lector.ReadInt64();
+
+                var comparacion = string.Compare(claveLeida, claveBuscada, StringComparison.Ordinal);
+
+                if (comparacion == 0)
+                {
+                    return posicion; 
+                }
+                else if (comparacion < 0)
+                {
+                    inicio = medio + 1; 
+                }
+                else
+                {
+                    fin = medio - 1; 
+                }
+            }
+        }
+
+        return -1;
+    }
 }
