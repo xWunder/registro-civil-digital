@@ -1,0 +1,4 @@
+@inherits InputDate<DateOnly>
+
+<input @attributes="AdditionalAttributes" type="date" name="@NameAttributeValue" class="@CssClass"
+       value="@CurrentValueAsString" @oninput="e => CurrentValueAsString = e.Value?.ToString()" />

@@ -1,0 +1,13 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+  <!-- Compila las mismas fuentes del motor; pruebas sin SQL ni paquetes externos. -->
+  <ItemGroup>
+    <Compile Include="../RegistroCivil.Web/FileStorage/*.cs" Link="FileStorage/%(Filename)%(Extension)" />
+    <Compile Include="../RegistroCivil.Web/Models/ActaNacimiento.cs" Link="Models/ActaNacimiento.cs" />
+  </ItemGroup>
+</Project>

@@ -7,15 +7,13 @@
                 <small>Gestión digital</small>
             </span>
         </a>
-        <label for="navbar-toggler-input" class="navbar-toggler d-md-none" aria-label="Mostrar u ocultar navegación">
+        <button type="button" class="navbar-toggler" aria-label="Mostrar u ocultar navegación" aria-controls="navegacion-principal" aria-expanded="@abierto.ToString().ToLowerInvariant()" @onclick="() => abierto = !abierto">
             <span class="navbar-toggler-icon"></span>
-        </label>
+        </button>
     </div>
 </div>
 
-<input type="checkbox" id="navbar-toggler-input" class="navbar-toggler-checkbox" />
-
-<div class="nav-scrollable" onclick="document.getElementById('navbar-toggler-input').click()">
+<div id="navegacion-principal" class="nav-scrollable @(abierto ? "expanded" : "")" @onclick="() => abierto = false">
     <nav class="flex-column px-3">
         <span class="nav-section-label">Gestión</span>
         <div class="nav-item">
@@ -36,9 +34,19 @@
                 <span>Registrar acta</span>
             </NavLink>
         </div>
+        <div class="nav-item">
+            <NavLink class="nav-link" href="archivos">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 5h18v5H3zM3 14h18v5H3zM7 7.5h1M7 16.5h1" /></svg>
+                <span>Archivos y rendimiento</span>
+            </NavLink>
+        </div>
     </nav>
     <div class="nav-footer">
         <span class="status-dot" aria-hidden="true"></span>
         <span>Aplicación disponible</span>
     </div>
 </div>
+
+@code {
+    private bool abierto;
+}

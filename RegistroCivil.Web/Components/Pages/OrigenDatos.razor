@@ -1,0 +1,16 @@
+<div class="origin-bar mb-3">
+    <span>Almacenamiento: <strong>@(Archivo ? "Archivo binario local" : "SQL Server")</strong></span>
+    @if (Archivo)
+    {
+        <a href="/actas?origen=archivo">Consultar archivo</a>
+        <a href="/actas/registrar?origen=archivo">Registrar en archivo</a>
+        <a href="/archivos">Rendimiento y preparación</a>
+    }
+    else
+    {
+        <a href="/archivos">Abrir módulo de archivos</a>
+    }
+</div>
+@code {
+    [Parameter] public bool Archivo { get; set; }
+}

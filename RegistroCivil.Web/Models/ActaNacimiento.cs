@@ -2,15 +2,16 @@
 
 namespace RegistroCivil.Web.Models;
 
-public class ActaNacimiento
+public class ActaNacimiento : IValidatableObject
 {
     public long Id { get; set; }
 
     [Required(ErrorMessage = "El número de acta es obligatorio.")]
     [StringLength(20)]
+    [RegularExpression(@"^[A-Za-z0-9-]+$", ErrorMessage = "Use letras, números y guiones en el número de acta.")]
     public string NumeroActa { get; set; } = string.Empty;
 
-    [RegularExpression(@"^\d{8}$",
+    [RegularExpression(@"^[0-9]{8}$",
         ErrorMessage = "El DNI debe contener exactamente 8 dígitos.")]
     public string? DniInscrito { get; set; }
 
@@ -34,7 +35,7 @@ public class ActaNacimiento
     public string Sexo { get; set; } = string.Empty;
 
     [Required(ErrorMessage = "El ubigeo es obligatorio.")]
-    [RegularExpression(@"^\d{6}$",
+    [RegularExpression(@"^[0-9]{6}$",
         ErrorMessage = "El ubigeo debe contener exactamente 6 dígitos.")]
     public string UbigeoNacimiento { get; set; } = string.Empty;
 
@@ -47,4 +48,12 @@ public class ActaNacimiento
     public DateTime FechaModificacion { get; set; } = DateTime.Now;
 
     public byte Estado { get; set; } = 1;
+
+    public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
+    {
+        if (FechaNacimiento == default || FechaNacimiento > DateOnly.FromDateTime(DateTime.Today))
+            yield return new ValidationResult("Ingrese una fecha de nacimiento válida, no futura.", [nameof(FechaNacimiento)]);
+        if (Estado is not (0 or 1))
+            yield return new ValidationResult("Estado inválido.", [nameof(Estado)]);
+    }
 }

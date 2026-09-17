@@ -13,7 +13,7 @@ public static class TextoFijoBinario
 
         if (texto.Length > cantidadCaracteres)
         {
-            texto = texto[..cantidadCaracteres];
+            throw new ArgumentException($"El texto supera {cantidadCaracteres} caracteres.");
         }
 
         texto = texto.PadRight(cantidadCaracteres, ' ');

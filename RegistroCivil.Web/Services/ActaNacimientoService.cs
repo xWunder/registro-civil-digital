@@ -1,23 +1,27 @@
 ﻿using System.Data;
 using Microsoft.Data.SqlClient;
 using RegistroCivil.Web.Models;
+using RegistroCivil.Web.FileStorage;
 
 namespace RegistroCivil.Web.Services;
 
 public class ActaNacimientoService
 {
     private readonly string _connectionString;
+    private readonly ArchivoActasRepository _archivos;
 
-    public ActaNacimientoService(IConfiguration configuration)
+    public ActaNacimientoService(IConfiguration configuration, ArchivoActasRepository archivos)
     {
+        _archivos = archivos;
         _connectionString = configuration.GetConnectionString("RegistroCivil")
             ?? throw new InvalidOperationException(
                 "No se encontró la conexión RegistroCivil.");
     }
 
     public async Task<(List<ActaNacimiento> Actas, long TotalRegistros)>
-        ListarPaginadoAsync(int pagina, int tamanoPagina)
+        ListarPaginadoAsync(int pagina, int tamanoPagina, bool archivo = false)
     {
+        if (archivo) return await Task.Run(() => _archivos.Listar(pagina, tamanoPagina));
         if (pagina < 1)
         {
             throw new ArgumentOutOfRangeException(
@@ -72,8 +76,9 @@ public class ActaNacimientoService
         return (actas, totalRegistros);
     }
 
-    public async Task<ActaNacimiento?> BuscarPorNumeroAsync(string numeroActa)
+    public async Task<ActaNacimiento?> BuscarPorNumeroAsync(string numeroActa, bool archivo = false)
     {
+        if (archivo) return await Task.Run(() => _archivos.Buscar(numeroActa));
         const string sql = """
             SELECT
                 Id, NumeroActa, DniInscrito, ApellidoPaterno,
@@ -96,8 +101,13 @@ public class ActaNacimientoService
         return await lector.ReadAsync() ? LeerActa(lector) : null;
     }
 
-    public async Task<List<ActaNacimiento>> BuscarPorDniAsync(string dni)
+    public async Task<List<ActaNacimiento>> BuscarPorDniAsync(string dni, bool archivo = false)
     {
+        if (archivo)
+        {
+            var encontrada = await Task.Run(() => _archivos.Buscar(dni, true));
+            return encontrada is null ? [] : [encontrada];
+        }
         const string sql = """
             SELECT
                 Id, NumeroActa, DniInscrito, ApellidoPaterno,
@@ -127,8 +137,10 @@ public class ActaNacimientoService
         return actas;
     }
 
-    public async Task<long> RegistrarAsync(ActaNacimiento acta)
+    public async Task<long> RegistrarAsync(ActaNacimiento acta, bool archivo = false)
     {
+        ArchivoActasRepository.Validar(acta);
+        if (archivo) return await Task.Run(() => _archivos.Agregar(acta));
         const string sql = """
             INSERT INTO dbo.ActasNacimiento
             (
@@ -156,8 +168,10 @@ public class ActaNacimientoService
         return Convert.ToInt64(resultado);
     }
 
-    public async Task<bool> ModificarAsync(ActaNacimiento acta)
+    public async Task<bool> ModificarAsync(ActaNacimiento acta, bool archivo = false)
     {
+        ArchivoActasRepository.Validar(acta);
+        if (archivo) return await Task.Run(() => _archivos.Modificar(acta));
         const string sql = """
             UPDATE dbo.ActasNacimiento
             SET
@@ -183,8 +197,9 @@ public class ActaNacimientoService
         return await comando.ExecuteNonQueryAsync() == 1;
     }
 
-    public async Task<bool> AnularAsync(long id)
+    public async Task<bool> AnularAsync(long id, bool archivo = false)
     {
+        if (archivo) return await Task.Run(() => _archivos.Anular(id));
         const string sql = """
             UPDATE dbo.ActasNacimiento
             SET Estado = 0,
@@ -199,6 +214,22 @@ public class ActaNacimientoService
 
         await conexion.OpenAsync();
         return await comando.ExecuteNonQueryAsync() == 1;
+    }
+
+    public async Task<long> ImportarArchivoAsync()
+    {
+        await using var conexion = new SqlConnection(_connectionString);
+        await conexion.OpenAsync();
+        await using var comando = new SqlCommand("SELECT * FROM dbo.ActasNacimiento ORDER BY Id", conexion);
+        comando.CommandTimeout = 120;
+        await using var lector = await comando.ExecuteReaderAsync();
+        // El lector no materializa la consulta; la validación de claves y los
+        // índices del repositorio todavía requieren memoria O(n).
+        IEnumerable<ActaNacimiento> LeerTodas()
+        {
+            while (lector.Read()) yield return LeerActa(lector);
+        }
+        return await Task.Run(() => _archivos.Preparar(LeerTodas()));
     }
 
     private static void AgregarParametros(

@@ -29,9 +29,13 @@ INSERT INTO dbo.ActasNacimiento
 SELECT
     CONCAT('ACT-2026-', RIGHT('000000' + CAST(N AS VARCHAR(6)), 6)),
     RIGHT('00000000' + CAST(90000000 + N AS VARCHAR(8)), 8),
-    CONCAT('ApellidoPaterno', N),
-    CONCAT('ApellidoMaterno', N),
-    CONCAT('Persona', N),
+    CHOOSE(CONVERT(INT, ((N - 100000) * 7 + (N - 100000) / 20) % 20 + 1), N'Aguilar', N'Benavides', N'Cabrera', N'Delgado', N'Espinoza', N'Flores', N'Guzmán', N'Herrera', N'Ibarra', N'Jiménez', N'Lozano', N'Mendoza', N'Navarro', N'Ortiz', N'Paredes', N'Quispe', N'Ramírez', N'Salazar', N'Torres', N'Valverde'),
+    CHOOSE(CONVERT(INT, ((N - 100000) * 11 + (N - 100000) / 400 + 3) % 20 + 1), N'Aguilar', N'Benavides', N'Cabrera', N'Delgado', N'Espinoza', N'Flores', N'Guzmán', N'Herrera', N'Ibarra', N'Jiménez', N'Lozano', N'Mendoza', N'Navarro', N'Ortiz', N'Paredes', N'Quispe', N'Ramírez', N'Salazar', N'Torres', N'Valverde'),
+    CASE WHEN N % 2 = 0 THEN
+        CHOOSE(CONVERT(INT, ((N - 100000) / 2) % 10 + 1), N'Ana', N'Lucía', N'Camila', N'Valentina', N'Mariana', N'Elena', N'Daniela', N'Paula', N'Renata', N'Sofía')
+    ELSE
+        CHOOSE(CONVERT(INT, ((N - 100000) / 2) % 10 + 1), N'Luis', N'Mateo', N'Diego', N'Gabriel', N'Joaquín', N'Andrés', N'Bruno', N'Nicolás', N'Adrián', N'Santiago')
+    END,
 
     -- Fechas entre 1980 y 2018
     DATEADD(DAY, N % 14000, CAST('1980-01-01' AS DATE)),

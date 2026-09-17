@@ -5,6 +5,7 @@
 @inject ActaNacimientoService ActaService
 
 <PageTitle>Editar acta</PageTitle>
+<OrigenDatos Archivo="@EsArchivo" />
 
 <div class="page-heading">
     <span class="eyebrow">Actualización de registro</span>
@@ -20,7 +21,7 @@ else if (!string.IsNullOrWhiteSpace(mensajeCarga))
 {
     <div class="alert alert-danger">@mensajeCarga</div>
 
-    <a class="btn btn-secondary" href="/actas">
+    <a class="btn btn-secondary" href="@($"/actas{Sufijo}")">
         Volver a búsqueda
     </a>
 }
@@ -47,8 +48,8 @@ else if (acta is not null)
 
                 <div class="row g-3">
                     <div class="col-md-6">
-                        <label class="form-label">Número de acta</label>
-                        <input class="form-control"
+                        <label class="form-label" for="campo-1">Número de acta</label>
+                        <input id="campo-1" class="form-control"
                                value="@acta.NumeroActa"
                                readonly />
                         <div class="form-text">
@@ -57,45 +58,45 @@ else if (acta is not null)
                     </div>
 
                     <div class="col-md-6">
-                        <label class="form-label">DNI del inscrito</label>
-                        <InputText class="form-control"
+                        <label class="form-label" for="campo-2">DNI del inscrito</label>
+                        <InputTextLive id="campo-2" class="form-control"
                                    maxlength="8"
                                    @bind-Value="acta.DniInscrito" />
                         <ValidationMessage For="@(() => acta.DniInscrito)" />
                     </div>
 
                     <div class="col-md-6">
-                        <label class="form-label">Apellido paterno</label>
-                        <InputText class="form-control"
+                        <label class="form-label" for="campo-3">Apellido paterno</label>
+                        <InputTextLive id="campo-3" class="form-control"
                                    @bind-Value="acta.ApellidoPaterno" />
                         <ValidationMessage For="@(() => acta.ApellidoPaterno)" />
                     </div>
 
                     <div class="col-md-6">
-                        <label class="form-label">Apellido materno</label>
-                        <InputText class="form-control"
+                        <label class="form-label" for="campo-4">Apellido materno</label>
+                        <InputTextLive id="campo-4" class="form-control"
                                    @bind-Value="acta.ApellidoMaterno" />
                         <ValidationMessage For="@(() => acta.ApellidoMaterno)" />
                     </div>
 
                     <div class="col-md-12">
-                        <label class="form-label">Nombres</label>
-                        <InputText class="form-control"
+                        <label class="form-label" for="campo-5">Nombres</label>
+                        <InputTextLive id="campo-5" class="form-control"
                                    @bind-Value="acta.Nombres" />
                         <ValidationMessage For="@(() => acta.Nombres)" />
                     </div>
 
                     <div class="col-md-4">
-                        <label class="form-label">
+                        <label class="form-label" for="campo-6">
                             Fecha de nacimiento
                         </label>
-                        <InputDate class="form-control"
+                        <InputDateLive id="campo-6" class="form-control"
                                    @bind-Value="acta.FechaNacimiento" />
                     </div>
 
                     <div class="col-md-4">
-                        <label class="form-label">Sexo</label>
-                        <InputSelect class="form-select"
+                        <label class="form-label" for="campo-7">Sexo</label>
+                        <InputSelect id="campo-7" class="form-select"
                                      @bind-Value="acta.Sexo">
                             <option value="">Seleccione</option>
                             <option value="F">Femenino</option>
@@ -105,20 +106,20 @@ else if (acta is not null)
                     </div>
 
                     <div class="col-md-4">
-                        <label class="form-label">
+                        <label class="form-label" for="campo-8">
                             Ubigeo de nacimiento
                         </label>
-                        <InputText class="form-control"
+                        <InputTextLive id="campo-8" class="form-control"
                                    maxlength="6"
                                    @bind-Value="acta.UbigeoNacimiento" />
                         <ValidationMessage For="@(() => acta.UbigeoNacimiento)" />
                     </div>
 
                     <div class="col-md-12">
-                        <label class="form-label">
+                        <label class="form-label" for="campo-9">
                             Lugar de nacimiento
                         </label>
-                        <InputText class="form-control"
+                        <InputTextLive id="campo-9" class="form-control"
                                    @bind-Value="acta.LugarNacimiento" />
                         <ValidationMessage For="@(() => acta.LugarNacimiento)" />
                     </div>
@@ -133,7 +134,7 @@ else if (acta is not null)
                         </button>
 
                         <a class="btn btn-outline-secondary"
-                           href="/actas">
+                           href="@($"/actas{Sufijo}")">
                             Cancelar
                         </a>
                     </div>
@@ -144,6 +145,9 @@ else if (acta is not null)
 }
 
 @code {
+    [SupplyParameterFromQuery(Name = "origen")] public string? Origen { get; set; }
+    private bool EsArchivo => Origen == "archivo";
+    private string Sufijo => EsArchivo ? "?origen=archivo" : "";
     [Parameter]
     public string NumeroActa { get; set; } = string.Empty;
 
@@ -161,11 +165,15 @@ else if (acta is not null)
 
         try
         {
-            acta = await ActaService.BuscarPorNumeroAsync(NumeroActa);
+            acta = await ActaService.BuscarPorNumeroAsync(NumeroActa, EsArchivo);
 
             if (acta is null)
             {
                 mensajeCarga = "El acta solicitada no existe.";
+            }
+            else if (acta.Estado == 0)
+            {
+                mensajeCarga = "Esta acta está anulada y no puede editarse.";
             }
         }
         catch (Exception ex)
@@ -202,7 +210,7 @@ else if (acta is not null)
         try
         {
             var actualizado =
-                await ActaService.ModificarAsync(acta);
+                await ActaService.ModificarAsync(acta, EsArchivo);
 
             mensajeExito = actualizado
                 ? "El acta fue modificada correctamente."

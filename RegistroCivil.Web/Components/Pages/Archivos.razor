@@ -1,0 +1,155 @@
+@page "/archivos"
+@using System.Diagnostics
+@using System.Globalization
+@using System.Text
+@using System.Text.Json
+@using RegistroCivil.Web.FileStorage
+@using RegistroCivil.Web.Models
+@using RegistroCivil.Web.Services
+@inject ArchivoActasRepository Archivo
+@inject ActaNacimientoService Sql
+
+<PageTitle>Archivos y rendimiento</PageTitle>
+<div class="page-heading">
+    <span class="eyebrow">Organización de archivos · Unidad I</span>
+    <h1>Archivos y rendimiento</h1>
+    <p>Consulte actas mediante índices y compare el acceso directo con la lectura secuencial.</p>
+</div>
+@if (error is not null) { <div class="alert alert-danger" role="alert">@error</div> }
+@if (mensaje is not null) { <div class="alert alert-success" role="status">@mensaje</div> }
+<div class="metric-grid mb-4">
+    <article class="card card-body"><span>Registros en archivo</span><strong>@cantidad.ToString("N0")</strong></article>
+    <article class="card card-body"><span>Longitud fija</span><strong>512 bytes</strong></article>
+    <article class="card card-body"><span>Cabecera</span><strong>64 bytes</strong></article>
+    <article class="card card-body"><span>Tamaño del archivo</span><strong>@((bytes / 1048576d).ToString("F2")) MiB</strong></article>
+</div>
+<section class="card card-body mb-4">
+    <h2 class="h5">Preparación de datos</h2>
+    <p>El archivo es un conjunto independiente de SQL. Los cambios en un almacenamiento no se sincronizan automáticamente con el otro.</p>
+    @if (cantidad == 0)
+    {
+        <p>Elija una carga inicial: copiar sus actas actuales de SQL o generar 100 000 actas ficticias para una demostración sin SQL Server.</p>
+        <div class="d-flex gap-2 flex-wrap">
+            <button class="btn btn-primary" disabled="@ocupado" @onclick="Importar">Copiar actas desde SQL</button>
+            <button class="btn btn-outline-primary" disabled="@ocupado" @onclick="Generar">Generar 100 000 actas simuladas</button>
+        </div>
+    }
+    else
+    {
+        <div class="d-flex gap-2 flex-wrap">
+            <a class="btn btn-primary" href="/actas?origen=archivo">Consultar archivo</a>
+            <a class="btn btn-outline-primary" href="/actas/registrar?origen=archivo">Registrar en archivo</a>
+        </div>
+        <small class="text-muted mt-2">La carga inicial está protegida para conservar los registros existentes.</small>
+    }
+</section>
+<section class="card card-body mb-4">
+    <h2 class="h5">Comparar una búsqueda</h2>
+    <p>Cinco repeticiones después de un calentamiento. Se muestran mediana, mínimo y máximo en milisegundos; no incluyen el renderizado de la página.</p>
+    <fieldset disabled="@(ocupado || cantidad == 0)">
+        <div class="row g-3 align-items-end">
+            <div class="col-md-3"><label for="criterio" class="form-label">Buscar por</label>
+                <select id="criterio" class="form-select" @bind="criterio"><option value="dni">DNI</option><option value="numero">Número de acta</option></select>
+            </div>
+            <div class="col-md-5"><label for="clave" class="form-label">Valor exacto</label>
+                <input id="clave" class="form-control" @bind="clave" @bind:event="oninput" placeholder="90199999 o ACT-2026-199999" />
+            </div>
+            <div class="col-md-4"><button class="btn btn-primary" @onclick="Comparar">Comparar métodos</button></div>
+            <div class="col-12"><label><input type="checkbox" @bind="incluirSql" /> Incluir consulta SQL Server</label></div>
+        </div>
+    </fieldset>
+    @if (ocupado) { <p class="mt-3" role="status">Procesando datos; espere a que finalice…</p> }
+</section>
+@if (resultado is not null)
+{
+    <section class="card card-body mb-4">
+        <h2 class="h5">Resultados medidos</h2>
+        <p>@resultado.Registros.ToString("N0") registros · @(resultado.PorDni ? "DNI" : "Acta"): @resultado.Clave · @fechaMedicion.ToString("yyyy-MM-dd HH:mm:ss")</p>
+        <div class="table-responsive">
+            <table class="table"><thead><tr><th>Método</th><th>Mediana (ms)</th><th>Mínimo (ms)</th><th>Máximo (ms)</th><th>Resultado (ID)</th></tr></thead>
+                <tbody>@foreach (var m in Mediciones) { <tr><td>@m.Metodo</td><td>@m.MedianaMs.ToString("F4")</td><td>@m.MinimoMs.ToString("F4")</td><td>@m.MaximoMs.ToString("F4")</td><td>@(m.Id?.ToString() ?? "No encontrado")</td></tr> }</tbody>
+            </table>
+        </div>
+        <p>La búsqueda secuencial y la indexada devolvieron el mismo resultado.</p>
+        @if (notaSql is not null) { <div class="alert alert-info">@notaSql</div> }
+        <a class="btn btn-outline-primary align-self-start" href="@CsvUrl" download="medicion-actas.csv">Descargar medición CSV</a>
+        <small class="text-muted mt-2">La caché, el equipo y la ubicación del registro afectan los tiempos. Una medición no demuestra el rendimiento con millones de registros.</small>
+    </section>
+}
+<section class="card card-body">
+    <h2 class="h5">Estructura y acceso</h2>
+    <p>Desplazamiento del registro: <code>64 + posición × 512</code>. El índice de DNI ocupa 24 bytes por entrada; el de número de acta, 48 bytes. La búsqueda binaria sobre el índice ordenado cuesta O(log n) y termina con una lectura directa del registro.</p>
+    <p class="mb-0">Insertar agrega 512 bytes al archivo de actas sin reescribir sus registros anteriores. En esta versión se reconstruyen los índices al escribir: O(n log n), una limitación a considerar para cinco millones de registros.</p>
+</section>
+
+@code {
+    private long cantidad, bytes;
+    private bool ocupado, incluirSql = true;
+    private string criterio = "dni", clave = "90199999";
+    private string? error, mensaje, notaSql;
+    private DateTime fechaMedicion;
+    private ArchivoActasRepository.Comparacion? resultado;
+    private ArchivoActasRepository.Medicion? sqlMedicion;
+    private IEnumerable<ArchivoActasRepository.Medicion> Mediciones => resultado is null ? [] :
+        sqlMedicion is null ? [resultado.Secuencial, resultado.Indexada] : [resultado.Secuencial, resultado.Indexada, sqlMedicion];
+    protected override async Task OnInitializedAsync() => await Ejecutar(async () => await Actualizar());
+    private async Task Actualizar() => (cantidad, bytes) = await Task.Run(Archivo.Estado);
+    private async Task Ejecutar(Func<Task> accion)
+    {
+        if (ocupado) return;
+        ocupado = true; error = null; mensaje = null;
+        try { await accion(); }
+        catch (Exception ex) { error = ex.Message; }
+        finally { ocupado = false; }
+    }
+    private Task Generar() => Ejecutar(async () =>
+    {
+        await Task.Run(() => Archivo.Preparar(DatosSimulados.Crear()));
+        await Actualizar(); mensaje = "100 000 actas ficticias e índices preparados. Ya puede buscar, registrar, editar y anular en el archivo.";
+    });
+    private Task Importar() => Ejecutar(async () =>
+    {
+        var n = await Sql.ImportarArchivoAsync();
+        await Actualizar(); mensaje = $"Se copiaron {n:N0} actas desde SQL. Ambas copias evolucionan por separado.";
+    });
+    private Task Comparar() => Ejecutar(async () =>
+    {
+        resultado = null; sqlMedicion = null; notaSql = null;
+        var valor = clave.Trim().ToUpperInvariant();
+        var dni = criterio == "dni";
+        if (valor.Length == 0 || (dni && (valor.Length != 8 || !valor.All(c => c is >= '0' and <= '9'))) || (!dni && (valor.Length > 20 || !valor.All(c => c is >= 'A' and <= 'Z' or >= '0' and <= '9' or '-'))))
+            throw new InvalidOperationException("Ingrese un DNI de 8 dígitos o un número de acta válido.");
+        resultado = await Task.Run(() => Archivo.Comparar(valor, dni));
+        fechaMedicion = DateTime.Now;
+        await Actualizar();
+        if (!incluirSql) { notaSql = "SQL no incluido en esta medición."; return; }
+        try
+        {
+            async Task<ActaNacimiento?> Consultar() => dni ? (await Sql.BuscarPorDniAsync(valor)).FirstOrDefault() : await Sql.BuscarPorNumeroAsync(valor);
+            await Consultar();
+            var tiempos = new List<double>();
+            ActaNacimiento? a = null;
+            for (var i = 0; i < 5; i++) { var reloj = Stopwatch.StartNew(); a = await Consultar(); tiempos.Add(reloj.Elapsed.TotalMilliseconds); }
+            tiempos.Sort();
+            sqlMedicion = new("SQL Server (conexión + consulta)", tiempos[2], tiempos[0], tiempos[4], a?.Id);
+            var delArchivo = await Task.Run(() => Archivo.Buscar(valor, dni));
+            notaSql = JsonSerializer.Serialize(a) == JsonSerializer.Serialize(delArchivo)
+                ? "SQL y archivo devolvieron el mismo registro completo. Los tiempos SQL incluyen la apertura de conexión; los del archivo incluyen apertura y lectura."
+                : "SQL y archivo contienen datos distintos para esta clave. Los tiempos corresponden a conjuntos independientes y no prueban equivalencia de datos.";
+        }
+        catch (Exception) { notaSql = "SQL no disponible: no se midió. Revise el servicio SQL Server y la conexión RegistroCivil en appsettings.json. Los resultados del archivo sí son reales."; }
+    });
+    private string CsvUrl
+    {
+        get
+        {
+            var csv = new StringBuilder("Fecha,Registros,Repeticiones,Criterio,Clave,Metodo,MedianaMs,MinimoMs,MaximoMs,Id\r\n");
+            foreach (var m in Mediciones)
+                csv.AppendLine(string.Join(",", fechaMedicion.ToString("O"), resultado!.Registros, resultado.Repeticiones,
+                    resultado.PorDni ? "DNI" : "Numero", resultado.Clave, m.Metodo,
+                    m.MedianaMs.ToString("F6", CultureInfo.InvariantCulture), m.MinimoMs.ToString("F6", CultureInfo.InvariantCulture),
+                    m.MaximoMs.ToString("F6", CultureInfo.InvariantCulture), m.Id?.ToString() ?? "No encontrado"));
+            return "data:text/csv;charset=utf-8;base64," + Convert.ToBase64String(Encoding.UTF8.GetBytes(csv.ToString()));
+        }
+    }
+}

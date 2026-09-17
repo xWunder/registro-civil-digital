@@ -76,7 +76,11 @@ public static class ActaArchivoBinario
         acta.FechaModificacion = new DateTime(lector.ReadInt64());
         acta.Estado = lector.ReadByte();
 
-        lector.ReadBytes(TamanoRelleno);
+        if (lector.ReadBytes(TamanoRelleno).Length != TamanoRelleno)
+            throw new EndOfStreamException("Registro incompleto.");
+
+        if (acta.DniInscrito.Length == 0) acta.DniInscrito = null;
+        if (acta.ApellidoMaterno.Length == 0) acta.ApellidoMaterno = null;
 
         return acta;
     }

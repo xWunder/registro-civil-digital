@@ -480,3 +480,8 @@ $RECYCLE.BIN/
 
 # Vim temporary swap files
 *.swp
+
+# Archivos de ejecución locales; se generan en cada equipo.
+RegistroCivil.Web/Data/ArchivoCivil/
+*.dat
+*.idx

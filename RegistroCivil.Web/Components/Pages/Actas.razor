@@ -5,6 +5,7 @@
 @inject ActaNacimientoService ActaService
 
 <PageTitle>Búsqueda de actas</PageTitle>
+<OrigenDatos Archivo="@EsArchivo" />
 
 <div class="page-heading">
     <span class="eyebrow">Consulta de registros</span>
@@ -18,16 +19,16 @@
 
         <div class="row g-3">
             <div class="col-md-5">
-                <label class="form-label">Número de acta</label>
-                <input class="form-control"
+                <label class="form-label" for="buscar-numero">Número de acta</label>
+                <input id="buscar-numero" class="form-control"
                        placeholder="Ejemplo: ACT-2026-000001"
                        @bind="numeroBuscado"
                        @bind:event="oninput" />
             </div>
 
             <div class="col-md-4">
-                <label class="form-label">DNI del inscrito</label>
-                <input class="form-control"
+                <label class="form-label" for="buscar-dni">DNI del inscrito</label>
+                <input id="buscar-dni" class="form-control"
                        placeholder="8 dígitos"
                        maxlength="8"
                        @bind="dniBuscado"
@@ -74,7 +75,7 @@ else
             <span>Resultados</span>
             @if (busquedaActiva)
             {
-                <strong>@actas.Count registros encontrados</strong>
+                <strong>@actas.Count @(actas.Count == 1 ? "registro encontrado" : "registros encontrados")</strong>
             }
             else
             {
@@ -161,7 +162,7 @@ else
                                 @if (acta.Estado == 1)
                                 {
                                     <a class="btn btn-sm btn-outline-primary me-1"
-                                       href="@($"/actas/editar/{acta.NumeroActa}")">
+                                       href="@($"/actas/editar/{Uri.EscapeDataString(acta.NumeroActa)}{Sufijo}")">
                                         Editar
                                     </a>
 
@@ -256,6 +257,9 @@ else
 }
 
 @code {
+    [SupplyParameterFromQuery(Name = "origen")] public string? Origen { get; set; }
+    private bool EsArchivo => Origen == "archivo";
+    private string Sufijo => EsArchivo ? "?origen=archivo" : "";
     private List<ActaNacimiento> actas = [];
     private string numeroBuscado = string.Empty;
     private string dniBuscado = string.Empty;
@@ -293,7 +297,7 @@ else
         }
     }
 
-    protected override async Task OnInitializedAsync()
+    protected override async Task OnParametersSetAsync()
     {
         await CargarTodosAsync();
     }
@@ -326,7 +330,7 @@ else
         }
 
         if (!string.IsNullOrWhiteSpace(dni) &&
-            (dni.Length != 8 || !dni.All(char.IsDigit)))
+            (dni.Length != 8 || !dni.All(c => c is >= '0' and <= '9')))
         {
             mensajeError = "El DNI debe contener exactamente 8 dígitos.";
             return;
@@ -340,13 +344,13 @@ else
             if (!string.IsNullOrWhiteSpace(numero))
             {
                 var acta =
-                    await ActaService.BuscarPorNumeroAsync(numero);
+                    await ActaService.BuscarPorNumeroAsync(numero, EsArchivo);
 
                 actas = acta is null ? [] : [acta];
             }
             else
             {
-                actas = await ActaService.BuscarPorDniAsync(dni);
+                actas = await ActaService.BuscarPorDniAsync(dni, EsArchivo);
             }
 
             if (actas.Count == 0)
@@ -400,7 +404,7 @@ else
         try
         {
             var resultado = await ActaService.ListarPaginadoAsync(
-                paginaActual, tamanoPagina);
+                paginaActual, tamanoPagina, EsArchivo);
 
             actas = resultado.Actas;
             totalRegistros = resultado.TotalRegistros;
@@ -409,7 +413,7 @@ else
             {
                 paginaActual = totalPaginas;
                 resultado = await ActaService.ListarPaginadoAsync(
-                    paginaActual, tamanoPagina);
+                    paginaActual, tamanoPagina, EsArchivo);
                 actas = resultado.Actas;
                 totalRegistros = resultado.TotalRegistros;
             }
@@ -477,7 +481,7 @@ else
 
         try
         {
-            var anulada = await ActaService.AnularAsync(id);
+            var anulada = await ActaService.AnularAsync(id, EsArchivo);
 
             if (busquedaActiva)
             {

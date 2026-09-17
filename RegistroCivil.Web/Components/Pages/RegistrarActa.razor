@@ -5,6 +5,7 @@
 @inject ActaNacimientoService ActaService
 
 <PageTitle>Registrar acta</PageTitle>
+<OrigenDatos Archivo="@EsArchivo" />
 
 <div class="page-heading">
     <span class="eyebrow">Nueva inscripción</span>
@@ -37,53 +38,53 @@
 
             <div class="row g-3">
                 <div class="col-md-6">
-                    <label class="form-label">Número de acta</label>
-                    <InputText class="form-control"
+                    <label class="form-label" for="campo-1">Número de acta</label>
+                    <InputTextLive id="campo-1" class="form-control"
                                @bind-Value="acta.NumeroActa" />
                     <ValidationMessage For="@(() => acta.NumeroActa)" />
                 </div>
 
                 <div class="col-md-6">
-                    <label class="form-label">DNI del inscrito</label>
-                    <InputText class="form-control"
+                    <label class="form-label" for="campo-2">DNI del inscrito</label>
+                    <InputTextLive id="campo-2" class="form-control"
                                maxlength="8"
                                @bind-Value="acta.DniInscrito" />
                     <ValidationMessage For="@(() => acta.DniInscrito)" />
                 </div>
 
                 <div class="col-md-6">
-                    <label class="form-label">Apellido paterno</label>
-                    <InputText class="form-control"
+                    <label class="form-label" for="campo-3">Apellido paterno</label>
+                    <InputTextLive id="campo-3" class="form-control"
                                @bind-Value="acta.ApellidoPaterno" />
                     <ValidationMessage For="@(() => acta.ApellidoPaterno)" />
                 </div>
 
                 <div class="col-md-6">
-                    <label class="form-label">Apellido materno</label>
-                    <InputText class="form-control"
+                    <label class="form-label" for="campo-4">Apellido materno</label>
+                    <InputTextLive id="campo-4" class="form-control"
                                @bind-Value="acta.ApellidoMaterno" />
                     <ValidationMessage For="@(() => acta.ApellidoMaterno)" />
                 </div>
 
                 <div class="col-md-12">
-                    <label class="form-label">Nombres</label>
-                    <InputText class="form-control"
+                    <label class="form-label" for="campo-5">Nombres</label>
+                    <InputTextLive id="campo-5" class="form-control"
                                @bind-Value="acta.Nombres" />
                     <ValidationMessage For="@(() => acta.Nombres)" />
                 </div>
 
                 <div class="col-md-4">
-                    <label class="form-label">
+                    <label class="form-label" for="campo-6">
                         Fecha de nacimiento
                     </label>
-                    <InputDate class="form-control"
+                    <InputDateLive id="campo-6" class="form-control"
                                @bind-Value="acta.FechaNacimiento" />
                     <ValidationMessage For="@(() => acta.FechaNacimiento)" />
                 </div>
 
                 <div class="col-md-4">
-                    <label class="form-label">Sexo</label>
-                    <InputSelect class="form-select"
+                    <label class="form-label" for="campo-7">Sexo</label>
+                    <InputSelect id="campo-7" class="form-select"
                                  @bind-Value="acta.Sexo">
                         <option value="">Seleccione</option>
                         <option value="F">Femenino</option>
@@ -93,20 +94,20 @@
                 </div>
 
                 <div class="col-md-4">
-                    <label class="form-label">
+                    <label class="form-label" for="campo-8">
                         Ubigeo de nacimiento
                     </label>
-                    <InputText class="form-control"
+                    <InputTextLive id="campo-8" class="form-control"
                                maxlength="6"
                                @bind-Value="acta.UbigeoNacimiento" />
                     <ValidationMessage For="@(() => acta.UbigeoNacimiento)" />
                 </div>
 
                 <div class="col-md-12">
-                    <label class="form-label">
+                    <label class="form-label" for="campo-9">
                         Lugar de nacimiento
                     </label>
-                    <InputText class="form-control"
+                    <InputTextLive id="campo-9" class="form-control"
                                @bind-Value="acta.LugarNacimiento" />
                     <ValidationMessage For="@(() => acta.LugarNacimiento)" />
                 </div>
@@ -118,7 +119,7 @@
                         @(procesando ? "Registrando..." : "Registrar acta")
                     </button>
 
-                    <a class="btn btn-outline-secondary" href="/actas">
+                    <a class="btn btn-outline-secondary" href="@($"/actas{Sufijo}")">
                         Cancelar
                     </a>
                 </div>
@@ -128,6 +129,9 @@
 </div>
 
 @code {
+    [SupplyParameterFromQuery(Name = "origen")] public string? Origen { get; set; }
+    private bool EsArchivo => Origen == "archivo";
+    private string Sufijo => EsArchivo ? "?origen=archivo" : "";
     private ActaNacimiento acta = NuevaActa();
     private bool procesando;
     private string? mensajeExito;
@@ -150,7 +154,7 @@
 
         try
         {
-            var id = await ActaService.RegistrarAsync(acta);
+            var id = await ActaService.RegistrarAsync(acta, EsArchivo);
 
             mensajeExito =
                 $"Acta registrada correctamente con el identificador {id}.";

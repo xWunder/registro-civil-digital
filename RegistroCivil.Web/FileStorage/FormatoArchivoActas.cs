@@ -20,6 +20,7 @@ public static class FormatoArchivoActas
 
     public static long CalcularOffset(long posicion)
     {
-        return TamanoCabecera + posicion * TamanoRegistro;
+        ArgumentOutOfRangeException.ThrowIfNegative(posicion);
+        return checked(TamanoCabecera + posicion * TamanoRegistro);
     }
 }

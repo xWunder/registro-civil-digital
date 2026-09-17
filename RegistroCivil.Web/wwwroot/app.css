@@ -1,3 +1,10 @@
+.origin-bar { display: flex; flex-wrap: wrap; align-items: center; gap: 0.7rem 1.2rem; padding: 0.9rem 1.1rem; background: #eaf1fb; border-radius: 0.8rem; color: #243c60; font-size: 0.88rem; }
+.origin-bar a { color: #174b95; }
+.metric-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 1rem; }
+.metric-grid strong { font-size: 1.5rem; color: #183b6b; }
+@media (max-width: 800px) { .metric-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 400px) { .metric-grid { grid-template-columns: 1fr; } }
+
 html, body {
     font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
 }
